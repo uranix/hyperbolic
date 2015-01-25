@@ -6,8 +6,6 @@
 #include "Solver.h"
 
 struct Hopf : public BaseProblem<float, 1, Hopf> {
-    float c;
-    Hopf(float c) : c(c) { }
     vec F(const vec &U) const {
         vec ret;
         ret << 0.5 * U[0] * U[0];
@@ -30,7 +28,7 @@ int main() {
     const float h = 1.0f / N;
     const float C = 0.5f;
 
-    Solver<Hopf> solver(Hopf(-1));
+    Solver<Hopf> solver{Hopf()};
 
     std::vector<Solver<Hopf>::Cell> cells(N);
     std::vector<Solver<Hopf>::Face> faces(N + 1);
