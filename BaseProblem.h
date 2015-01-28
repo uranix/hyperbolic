@@ -10,21 +10,13 @@ struct BaseProblem {
     typedef Eigen::Matrix<T, n, n> mat;
     typedef Eigen::Matrix<T, n, 1> vec;
     typedef T real;
-
-private:
-    mutable vec wU;
-protected:
-    vec U() const {
-        return wU;
-    }
 public:
     BaseProblem() { }
-    void assign(const vec &v) const { wU = v; }
-    mat omega() const;
-    vec lambda() const;
-    mat fromDiag(const vec &diag) const {
+    mat omega(const vec &Umid) const;
+    vec lambda(const vec &Umid) const;
+    mat fromDiag(const vec &Umid, const vec &diag) const {
         const Problem &prob = static_cast<const Problem &>(*this);
-        const auto &Omega = prob.omega();
+        const auto &Omega = prob.omega(Umid);
         const auto &Diag = diag.asDiagonal();
         const auto &iOmega = Omega.inverse();
         return iOmega * Diag * Omega;

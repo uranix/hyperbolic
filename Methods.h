@@ -25,9 +25,8 @@ struct CourantIsaaksonRees : public BaseMethod<Problem> {
     vec F(const Problem &prob, const vec &U1, const vec &U2, const real) const {
         const auto half = static_cast<real>(0.5);
         const auto &wU = half * (U1 + U2);
-        prob.assign(wU);
-        const auto &lam = prob.lambda();
-        const auto &Aabs = prob.fromDiag(lam.cwiseAbs());
+        const auto &lam = prob.lambda(wU);
+        const auto &Aabs = prob.fromDiag(wU, lam.cwiseAbs());
         return half * (prob.F(U1) + prob.F(U2) + Aabs * (U1 - U2));
     }
 };
@@ -39,8 +38,7 @@ struct LaxFriedrichs : public BaseMethod<Problem> {
     vec F(const Problem &prob, const vec &U1, const vec &U2, const real) const {
         const auto half = static_cast<real>(0.5);
         const auto &wU = half * (U1 + U2);
-        prob.assign(wU);
-        const auto &lam = prob.lambda();
+        const auto &lam = prob.lambda(wU);
         const auto Amax = lam.cwiseAbs().maxCoeff();
         return half * (prob.F(U1) + prob.F(U2) + Amax * (U1 - U2));
     }

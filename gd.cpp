@@ -28,14 +28,14 @@ struct Euler : public BaseProblem<double, 3, Euler> {
         double p = pressure(rho, eps);
         return vec(rho * u, rho * u * u + p, (rho * (eps + u * u / 2) + p) * u);
     }
-    vec lambda() const {
-        double rho = U()[0];
+    vec lambda(const vec &Umid) const {
+        double rho = Umid[0];
         double rhomin = static_cast<double>(1e-6);
         double epsmin = static_cast<double>(1e-6);
         if (rho < rhomin)
             rho = rhomin;
-        double u = U()[1] / rho;
-        double eps = U()[2] / rho - u * u / 2;
+        double u = Umid[1] / rho;
+        double eps = Umid[2] / rho - u * u / 2;
         if (eps < epsmin)
             epsmin = eps;
 
@@ -43,15 +43,15 @@ struct Euler : public BaseProblem<double, 3, Euler> {
 
         return vec(u - c, u, u + c);
     }
-    mat omega() const {
+    mat omega(const vec &Umid) const {
         mat ret;
-        double rho = U()[0];
+        double rho = Umid[0];
         double rhomin = static_cast<double>(1e-6);
         double epsmin = static_cast<double>(1e-6);
         if (rho < rhomin)
             rho = rhomin;
-        double u = U()[1] / rho;
-        double eps = U()[2] / rho - u * u / 2;
+        double u = Umid[1] / rho;
+        double eps = Umid[2] / rho - u * u / 2;
         if (eps < epsmin)
             epsmin = eps;
 

@@ -20,15 +20,14 @@ struct Solver {
         )
     {
         const auto &wU = static_cast<typename Problem::real>(0.5) * (l.U + r.U);
-        prob.assign(wU);
 
         f.wU = wU;
-        const auto &Omega = prob.omega();
+        const auto &Omega = prob.omega(wU);
         const auto &dW = Omega * (r.U - l.U);
         l.P = dW;
         r.Q = dW;
 
-        return prob.lambda().cwiseAbs().maxCoeff();
+        return prob.lambda(wU).cwiseAbs().maxCoeff();
     }
 
     template<
@@ -44,12 +43,10 @@ struct Solver {
             const MethodHigh<Problem> &methodHigh = MethodHigh<Problem>()
         )
     {
-        prob.assign(f.wU);
-
         const auto delta = static_cast<typename Problem::real>(1e-6);
         const auto d2 = delta * delta;
 
-        const auto &lam = prob.lambda();
+        const auto &lam = prob.lambda(f.wU);
         typename Problem::vec phi;
         for (int i = 0; i < Problem::n; i++) {
             if (lam[i] > 0)
@@ -60,7 +57,7 @@ struct Solver {
         const auto &Flo = methodLow .F(prob, l.U, r.U, dt_h);
         const auto &Fhi = methodHigh.F(prob, l.U, r.U, dt_h);
 
-        const auto &Phi = prob.fromDiag(phi);
+        const auto &Phi = prob.fromDiag(f.wU, phi);
 
         f.F = Flo + Phi * (Fhi - Flo);
     }

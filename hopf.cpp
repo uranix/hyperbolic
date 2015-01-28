@@ -11,12 +11,12 @@ struct Hopf : public BaseProblem<float, 1, Hopf> {
         ret << 0.5 * U[0] * U[0];
         return ret;
     }
-    vec lambda() const {
+    vec lambda(const vec &Umid) const {
         vec ret;
-        ret << U()[0];
+        ret << Umid[0];
         return ret;
     }
-    mat omega() const {
+    mat omega(const vec &Umid) const {
         mat ret;
         ret << 1;
         return ret;
@@ -24,7 +24,7 @@ struct Hopf : public BaseProblem<float, 1, Hopf> {
 };
 
 int main() {
-    const int N = 50;
+    const int N = 500;
     const float h = 1.0f / N;
     const float C = 0.5f;
 
@@ -38,7 +38,7 @@ int main() {
         cells[i].U[0] = sin(8 * atan(1) * x);
     }
 
-    for (int steps = 0; steps < 20; steps ++) {
+    for (int steps = 0; steps < N / 3; steps ++) {
         float amax = 0;
         for (size_t i = 1; i < N; i++) {
             float a = solver.prepareAndComputeAmax(cells[i - 1], cells[i], faces[i]);
