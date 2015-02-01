@@ -72,8 +72,9 @@ int main() {
 
     Solver<Euler> solver(Euler(1.4));
 
-    std::vector<Solver<Euler>::Cell> cells(N);
-    std::vector<Solver<Euler>::Face> faces(N + 1);
+    std::vector<Cell<Euler>> cells(N);
+    std::vector<CellExtra<Euler>> cex(N);
+    std::vector<Face<Euler>> faces(N + 1);
 
     for (size_t i = 0; i < N; i++) {
         double x = (i + 0.5) * h;
@@ -87,19 +88,25 @@ int main() {
     for (int steps = 0; steps < N; steps ++) {
         double amax = 0;
         for (size_t i = 1; i < N; i++) {
-            double a = solver.prepareAndComputeAmax(cells[i - 1], cells[i], faces[i]);
+            double a = solver.prepareAndComputeAmax(
+                    cells[i - 1], cells[i],
+                    cex[i - 1], cex[i],
+                    faces[i]);
             if (a > amax)
                 amax = a;
         }
-        cells.front().Q.fill(0);
-        cells.back().P.fill(0);
+        cex.front().L.fill(0);
+        cex.back().R.fill(0);
         const double dt_h = C / amax;
 
         for (size_t i = 1; i < N; i++)
-            solver.computeLimitedFluxes<SuperBee, CourantIsaaksonRees, LaxWendroff>(cells[i - 1], cells[i], faces[i], dt_h);
+            solver.computeLimitedFluxes<VanLeer, CourantIsaaksonRees, LaxWendroff>(
+                    cells[i - 1], cells[i],
+                    cex[i - 1], cex[i],
+                    faces[i], dt_h);
 
         for (size_t i = 1; i < N - 1; i++)
-            solver.integrateFluxes(faces[i], faces[i+1], cells[i], dt_h);
+            solver.integrateFluxes(faces[i], faces[i+1], cells[i], cells[i], dt_h);
     }
 
     for (size_t i = 0; i < N; i++) {

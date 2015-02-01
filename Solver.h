@@ -2,21 +2,32 @@
 #define __SOLVER_H__
 
 template<class Problem>
+struct Cell {
+    typename Problem::vec U;
+};
+
+template<class Problem>
+struct CellExtra {
+    typename Problem::vec R, L;
+};
+
+template<class Problem>
+struct Face {
+    typename Problem::vec wU, F;
+};
+
+
+template<class Problem, class Cell = Cell<Problem>, class CellExtra = CellExtra<Problem>, class Face = Face<Problem> >
 struct Solver {
-    struct Cell {
-        typename Problem::vec U, P, Q;
-    };
-
-    struct Face {
-        typename Problem::vec wU, F;
-    };
-
     const Problem prob;
+    typedef Cell cell_type;
+    typedef Face face_type;
 
     Solver(const Problem &prob) : prob(prob) { }
 
     typename Problem::real prepareAndComputeAmax(
-            Cell &l, Cell &r, Face &f
+            const Cell &l, const Cell &r,
+            CellExtra &le, CellExtra &re, Face &f
         )
     {
         const auto &wU = static_cast<typename Problem::real>(0.5) * (l.U + r.U);
@@ -24,8 +35,8 @@ struct Solver {
         f.wU = wU;
         const auto &Omega = prob.omega(wU);
         const auto &dW = Omega * (r.U - l.U);
-        l.P = dW;
-        r.Q = dW;
+        le.R = dW;
+        re.L = dW;
 
         return prob.lambda(wU).cwiseAbs().maxCoeff();
     }
@@ -36,7 +47,9 @@ struct Solver {
         template<typename Prob> class MethodHigh
     >
     void computeLimitedFluxes(
-            const Cell &l, const Cell &r, Face &f,
+            const Cell &l, const Cell &r,
+            const CellExtra &le, const CellExtra &re,
+            Face &f,
             typename Problem::real dt_h,
             const Limiter<typename Problem::real> &limiter = Limiter<typename Problem::real>(),
             const MethodLow <Problem> &methodLow  = MethodLow <Problem>(),
@@ -50,9 +63,9 @@ struct Solver {
         typename Problem::vec phi;
         for (int i = 0; i < Problem::n; i++) {
             if (lam[i] > 0)
-                phi[i] = l.P[i] / (l.P[i] * l.P[i] + d2) * limiter.psi(l.P[i], l.Q[i]);
+                phi[i] = le.R[i] / (le.R[i] * le.R[i] + d2) * limiter.psi(le.R[i], le.L[i]);
             else
-                phi[i] = r.Q[i] / (r.Q[i] * r.Q[i] + d2) * limiter.psi(r.P[i], r.Q[i]);
+                phi[i] = re.L[i] / (re.L[i] * re.L[i] + d2) * limiter.psi(re.R[i], re.L[i]);
         }
         const auto &Flo = methodLow .F(prob, l.U, r.U, dt_h);
         const auto &Fhi = methodHigh.F(prob, l.U, r.U, dt_h);
@@ -63,11 +76,11 @@ struct Solver {
     }
 
     void integrateFluxes(
-            const Face &l, const Face &r, Cell &c,
+            const Face &l, const Face &r, const Cell &from, Cell &to,
             typename Problem::real dt_h
         )
     {
-        c.U += dt_h * (l.F - r.F);
+        to.U = from.U + dt_h * (l.F - r.F);
     }
 };
 

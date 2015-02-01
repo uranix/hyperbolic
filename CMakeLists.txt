@@ -15,7 +15,12 @@ endif()
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 
+find_package(OpenMP)
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+
 include_directories(eigen/)
 
-add_executable(hopf hopf.cpp)
+#add_executable(hopf hopf.cpp)
 add_executable(gd gd.cpp)
+#add_executable(2d 2d.cpp)
